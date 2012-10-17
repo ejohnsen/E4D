@@ -1,0 +1,574 @@
+CHANGELOG
+---------
+
+cocos3d 0.7.1
+
+Copyright (c) 2010-2012 The Brenwill Workshop Ltd. All rights reserved.
+http://www.brenwill.com
+
++++++++++++++++++++++++++++++++++++
+
+
+cocos3d 0.7.1 - 2012/04/22
+-------------------------------------
+
+- Added explicit support for Gesture Recognizers:
+    - Added CC3Node methods cc3ConvertUIPointToNodeSpace:, cc3ConvertUIMovementToNodeSpace: & cc3NormalizeUIMovement: to make it easy to use gesture location data in a CC3Layer and CC3Scene.
+	- Added CC3Scene pickNodeFromTapAt: and pickNodeFromTouchEvent:at: methods to make it easy to pick nodes from tap & long-press gestures and touch events.
+	- Added CC3Layer cc3AddGestureRecognizer: and cc3RemoveGestureRecognizer: methods to simplify adding a gesture recogizers to a dedicated layer.
+	- Added CC3Node cc3ValidateGesture:, cc3WillConsumeTouchEventAt: and cc3ContainsTouchPoint: methods to help determine whether a gesture should be cancelled because a cocos2d button or control on the layer wants the touch event.
+    - Added CC3Layer onOpenCC3Layer and onCloseCC3Layer callback template methods as convenient place to perform set-up and tear-down activity, including managing gesture recognizers for a dedicated CC3Layer.
+	- CC3DemoMashUp now uses pinch, pan and tap gestures to move or pan the camera, select 3D nodes, and spin the cubes.
+	    - Setting shouldUseGestures variable in CC3DemoMashUpLayer initializeControls method will turn gestures off, and layer and scene will use basic touch events for control. 
+- Added CC3Node shouldCastShadowsWhenInvisible property to allow meshes and lights to cast shadows even when invisible.
+- Corrected the capitalization of the name of the Stamp.pvr texture file.
+- Added short delay to resuming activity in AppDelegate applicationDidBecomeActive: method, to fix issue where performance slowed to 40fps on app resume.
+- Moved cocos2d extensions for cocos3d to CC3CC2Extensions.h from CC3Foundation.h.
+- Moved iOS extensions for cocos3d to CC3IOSExtensions.h from CC3Foundation.h.
+- Added assertion in CC3OpenGLES11VertexArrays drawIndicies:ofLength:andType:as: method to detect models that contain index types other than GL_UNSIGNED_SHORT or GL_UNSIGNED_BYTE.
+- Added log level to output of LogClean... logging functions.
+- Added backward compatibility with legacy LLVM GCC 4.2 compiler
+- Changed target tracking to use node transform listener framework.
+- [API change] Extended CC3NodeTransformListenerProtocol to include CC3NodeListenerProtocol, which adds the nodeWasDestroyed: method. This is to help maintain object map integrity when weak links are used.
+- [API change] CC3Node target property is no longer retained. This is to avoid retain cycles.
+- [API change] Transform listeners added to a CC3Node via the addTransformListener: are no longer retained. This is to avoid retain cycles.
+- [API change] Transform listeners added to a CC3Node via the addTransformListener: are now sent immediate notification only if transform is not dirty.
+- [API change] Transform listeners are no longer automatically copied when a node is copied. This is to make adding a listener deliberate, to ensure listeners know who they have subscribed to.
+- [API change] CC3Node isTransformDirty now returns YES on newly created node.
+- Renamed CC3Node cleanup method to cleanupActions to clarify purpose, and deprecated cleanup.
+- Renamed CC3Node shouldCleanupWhenRemoved method to shouldCleanupActionsWhenRemoved to clarify purpose, and deprecated shouldCleanupWhenRemoved.
+- Fixed memory leaks when destroying and recreating CC3Scenes with skinned meshes, shadows, 2D particle systems, or fog.
+- Fixed incorrect override of CC3Scene close method in the CC3Scene subclass in the hello, world template app.
+- Changed install-cocos3d.sh script to remove option to install outside user home directory.
+
+
+cocos3d 0.7.0 - 2012/04/12
+-------------------------------------
+
+- [API change] Renamed CC3World to CC3Scene, and deprecated CC3World, in order to clarify the purpose of that class.
+    - Existing methods and properties retained as deprecated. Legacy apps should compile as they did before, but with deprecation warnings.
+- Added two new callback methods to CCScene:
+    - onOpen - invoked when the world and layer are first opened for viewing:
+	    - useful for initialization that requires node transforms and global properties (eg- globalLocation), or the camera frustum, to be available.
+		- the CC3Camera moveToShowAllOf:... family of methods can be invoked at this time to frame the initial scene.
+		- In the CC3DemoMashUp demo app, the camera of the heads-up child window is moved to frame the rotating globe in the HUDScene onOpen method.
+    - onClose - invoked when the layer and world are removed from viewing:
+		- useful for releasing optional app resources from memory.
+- Added support for automatic shadowing using shadow volumes:
+    - Adding a shadow volume to a mesh node will create a shadow for that node that will automatically track the movements of the node or the light that is casting the shadow, or the vertex deformations for skinned nodes.
+    - Added CC3Node addShadowVolumes and addShadowVolumesForLight: methods to add a shadow volume to nodes in a node assembly.
+    - CC3Node shadowLagCount property can be used to improve performance by updating shadow volumes less frequently.
+- Stencil buffers now supported via combined depth/stencil buffer created by CC3EAGLView:
+    - CC3EAGLView init methods now support a value of GL_DEPTH24_STENCIL8_OES for the depthFormat parameter to add a stencil buffer.
+- Enhancements to texture management:
+	- CC3MeshNode now automatically creates a material when a texture is added, or when any of the material properties of the CC3MeshNode are set or accessed (eg. color, opacity, ambientColor, diffuseColor, specularColor, isOpaque, etc).
+    - Texture mipmaps are now automatically generated and used for all textures.
+	    - CC3Texture shouldGenerateMipmaps class-side property controls automatic mipmap generation.
+		- Mipmaps contained inside PVR files are automatically detected and used.
+		- Added hasMipmap property to CCTexture2D and CC3Texture.
+		- Added CC3Texture2D subclass of CCTexture2D to provide more automated tracking of texture mipmaps.
+		- CC3Texture2D is automatically used for any texture loaded by CC3Texture.
+		- CCTexture2D can now be configured as a cluster class to instantiate any subclass (such as CC3Texture2D) in its place, even when used within cocos2d.
+		- CC3Texture mipmap and wrapping properties now have better access and better documentation
+    - The alignment of textures with meshes, for both NPOT and iOS-inverted textures is now completely automatic when a texture or material is assigned to a CC3MeshNode:
+        - [API change] Deprecated CC3Node alignTextures and alignInvertedTextures methods.
+        - [API change] Deprecated CC3Mesh alignWithTexturesIn: and alignWithInvertedTexturesIn: methods.
+        - CC3Texture now supports a isFlippedVertically property that is set during texture loading to indicate whether the texture was flipped vertically by the iOS on loading.
+	    - CC3MeshNode, CC3Mesh, and CC3VertexTextureCoordinates now support a expectsVerticallyFlippedTextures property to indicate whether the mesh expects the texture to be vertically flipped.
+	    - The CC3Resource expectsVerticallyFlippedTextures property can be set prior to loading a resource to indicate whether the resource expects the textures to be flipped vertically.
+	    - CC3VertexArrayMesh textureCoordinatesForTextureUnit: now returns the highest number texture coordinates array if request is for a texture unit for which there is no texture coordinates.
+	    - CC3Texture mapSize property is now of type CGSize instead of ccTex2F.
+    - CC3Texture now binds textureParameters during the rendering of each texture
+	    - Each texture may now specify its own textureParameters
+		- CC3Texture defaultTextureParameters class-side property can set defaults during texture loading.
+- CC3Resource & CC3ResourceNode file loading methods now support both absolute file paths and file paths relative to the resources directory.
+    - [API change] Deprecated CC3Resource & CC3ResourceNode methods that specifically loaded from files in the resources directory.
+- Added node ray-casting capabilities:
+    - Added CC3Node locationOfGlobalRayIntesection: and globalLocationOfGlobalRayIntesection: methods to indicate where on an object a CC3Ray intersects the node's local bounding box.
+	    - This can be used to locate a touch point on an object from a CC3Ray retrieved from the CC3Camera unprojectPoint: method.
+		- The location is in the local coordinate system of the node, and can be used directly to add other nodes (eg- drag & drop, bullet holes) to the touched node at that location.
+	    - Added similar CC3BoundingVolume globalLocationOfGlobalRayIntesection: method.
+	- Added CC3Node nodesIntersectedByGlobalRay: and closestNodeIntersectedByGlobalRay: methods and CC3NodePuncturingVisitor class to collect nodes intersected by a ray.
+	    - This can be used to detect the nodes under a touch point, separately from node picking, or may be used to determine objects hit by a projectile, etc.
+    - [API change] Function CC3RayIntersectionWithPlane now returns kCC3Vector4Null, instead of kCC3Vector4Zero, when the ray is parallel to the plane and therefore no intersection occurs.
+- Consolidated CC3Frustum and CC3NodeBoundingVolume classes under a single CC3BoundingVolume class hierarchy:
+    - Added collision-detection between nodes with the CC3Node doesIntersectNode: method.
+	    - Invoke doesIntersectNode: either in the updateBeforeTransform: (if setting motion of nodes directly), or in the updateAfterTransform: (if using actions) methods of CCScene, or a node, to detect collisions.
+		- CC3DemoMashUp now demonstrates collision between the rainbow teapot and a brick wall.
+    - [API change] Renamed CC3Node doesIntersectFrustum: to doesIntersectBoundingVolume: and deprecated doesIntersectFrustum:.
+	- [API change] CC3Node doesIntersectBoundingVolume: (doesIntersectFrustum:) now returns NO if the node has no bounding volume. Previously it returned YES:
+		- CC3MeshNodes without a bounding volume (ie. with a nil boundingVolume property) are no longer drawn.
+		- CC3NodeInfiniteBoundingVolume can now be used when a node should always be drawn, to replicate the previous effect of having no bounding volume.
+    - [API change] Renamed CC3BoundingVolume doesIntersectFrustum: to doesIntersect: and deprecated doesIntersectFrustum:.
+    - [API change] Renamed CC3Frustum doesIntersectPointAt: to parent class doesIntersectLocation: and deprecated doesIntersectPointAt:.
+    - [API change] Renamed CC3Frustum doesIntersectSphereAt:withRadius: to parent class doesIntersectSphere: and deprecated doesIntersectSphereAt:withRadius:.
+    - [API change] Renamed CC3Frustum markPlanesDirty to markDirty and deprecated markPlanesDirty
+    - [API change] Renamed CC3Camera buildPerspective to buildProjection and deprecated buildPerspective
+	- [API change] Removed CC3NodeBoundingVolume update and markDirtyAndUpdate methods. Rebuilding and transforming are now handled lazily and automatically.
+	- [API change] Replaced CC3NodeBoundingBoxVolume globalBoundingBoxVertices with the superclass vertices property and deprecated globalBoundingBoxVertices.
+	- [API change] Replaced function CC3DistanceFromNormalizedPlane with CC3DistanceFromPlane and deprecated CC3DistanceFromNormalizedPlane.
+- Moved directional targetting and target tracking to CC3Node.
+    - All nodes can now be pointed at a direction, location, or target node, and can be configured to track the target.
+	- Added CC3Node forwardDirection and worldUpDirection properties, along with the read-only upDirection and rightDirection properties.
+	    - The initial forwardDirection for all nodes except cameras and lights is now along the positive-Z axis. This represents a more natural direction when creating models (X to the right, Y up, and Z toward you), and nodes now point towards the default camera position.
+		- The initial forwardDirection for cameras and lights is along the negative-Z axis, in keeping with OpenGL standards.
+	- Added CC3Node target, targetLocation, shouldTrackTarget, shouldAutotargetCamera, and axisRestriction properties to have the node automatically rotate to track a location or another node.
+	- Added CC3Node isTrackingForBumpMapping property to have the node track a light for adaptively illuminating texture bump-maps.
+	- Added CC3Node methods asTrackingWrapper, asCameraTrackingWrapper, and asBumpMapLightTrackingWrapper to easily create wrapper nodes to track nodes, cameras or lights.
+	- [API change] Deprecated classes CC3TargettingNode and CC3LightTracker.
+	- [API change] Deprecated CC3Node methods asTargettingNode, asTracker, asCameraTracker, and asLightTracker.
+- Enhancements to 3D CCActionIntervals:
+	- Added CC3MoveForwardBy action to move a node in the direction of the node's forwardDirection vector by a specific distance over time.
+	- Added CC3MoveRightBy action to move a node in the direction of the node's rightDirection vector by a specific distance over time.
+	- Added CC3MoveUpBy action to move a node in the direction of the node's upDirection vector by a specific distance over time.
+		- In all of these, the distance may be negative, to move backwards, left, and down, respectively.	
+	    - The direction of movement is evaluated on each update frame. If the node is separately rotated while the action is active, the action will follow the changes to the direction of movement.
+    - Added CC3RotateByAngle actionWithDuration:rotateByAngle:aroundAxis: method to allow applying consecutive rotations to a CC3Node.
+	    - for example rotate by 90 degrees around the Y axis, then rotate by 45 degrees around the X axis.
+	- Added CC3ScaleTo actionWithDuration:scaleUniformlyTo: method for convenience
+	- Added CC3ScaleBy actionWithDuration:scaleUniformlyBy: method for convenience
+	- [API change] CC3ScaleBy now scales multiplicatively. If scale is already 3 and scale by is 5, the final scale will be 15, not 8, as before when scaling was by difference.
+- Added CC3Node asOrientingWrapper method to easily wrap a node in another node to assign rotational or locational offsets.
+- Added support for general notifications whenever the node is transformed (moved, rotated or scaled).
+    - Added protocol CC3NodeTransformListenerProtocol to allow any object to be notified when a node is transformed (moved, rotated or scaled).
+    - Added CC3Node addTransformListener: and removeTransformListener: methods, and transformListeners property.
+- Added diagnostic features to help developers:
+    - Added CC3Node shouldDrawBoundingVolume and shouldDrawAllBoundingVolumes to display the bounding volumes assigned to a node (usually a mesh node):
+	    - Generally two bounding volumes displayed per node: a magenta sphere and a cyan bounding box. Intersection tests require that both be intersected.
+	    - Displaying these during development can aid in validating collision detection and frustum culling.
+	- Added shouldLogIntersections and shouldLogIntersectionMisses to CC3BoundingVolume and CC3Node to log when a bounding volume or node intersects another.
+	    - These properties are useful during development to help trace intersections between nodes and bounding volumes, such as collision detection between nodes, or whether a node is within the camera's frustum.
+    - Added CC3VertexArray describeElements: family of methods as a convenience for logging vertex data content during troubleshooting.
+    - Added CC3DirectionMarkerNode directionMarkerMinimumLength property to ensure nodes with zero extent (such as cameras and lights) can be given direction markers.
+- Added CC3FaceArray class to track additional information about the faces of a mesh.
+- Added convenience access to individual faces within a mesh:
+    - Added faceCount property to CC3MeshNode, CC3Mesh & CC3DrawableVertexArray.
+	- Added methods faceAt:, faceFromIndices:, faceIndicesAt:, faceCenterAt:, faceNormalAt:, facePlaneAt & faceNeighboursAt to CC3MeshNode, CC3Mesh & CC3VertexLocations.
+	- Added shouldCacheFaces property to CC3Mesh & CC3MeshNode to indicate whether to cache face indices, to improve performance at the expense of memory.
+	- Added CCMeshNode methods deformedFaceAt:, deformedFaceCenterAt:, deformedFaceNormalAt: & deformedFacePlaneAt for accessing vertices and faces that have been deformed by vertex skinning.
+    - [API change] Added CC3VertexIndices method populateFromRunLengthArray:ofLength: to replace separate CC3VertexRunLengthIndices subclass, which has been removed to accomodate accessing individual vertex indices and faces.
+- Added convenient access to the center of geometry of a node:
+    - Added CC3Node centerOfGeometry and globalCenterOfGeometry properties.
+	- Added CC3LocalContentNode localContentCenterOfGeometry and globalLocalContentCenterOfGeometry properties.
+- Added CC3MeshNode & CC3Mesh properties drawingMode, vertexCount, vertexIndexCount & isUsingGLBuffers
+- Added support for decals via decal offsets:
+    - Added CC3Node decalOffsetFactor and decalOffsetUnits properties to allow nodes used as decals (eg. bullet holes) to avoid Z-fighting with the nodes they are stuck to.
+- Added or improved several CC3MeshNode parametric construction methods:
+    - Added CC3MeshNode populateAsSphereWithRadius:andTessellation: to programatically create a spherical mesh node that can be covered with either a texture or a single color.
+		- The rotating globe in CC3DemoMashUp and CC3Performance is now created programatically and covered with a standard rectangular world map texture.
+    - Added populateAsDiskWithRadius:andTessellation: to programatically create a flat circular mesh node that can be covered with either a texture or a single color.
+		- The ground plane in CC3DemoMashUp is now created as a circular plane instead of a rectangular plane.
+    - Added CC3VertexArrayMesh methods allocateTexturedVertices: and allocateIndexedTriangles: to simplify programatic creation of textured and/or indexed triangular meshes. 
+	- Added CC3VertexArray interleaveWith:usingOffset: method to simplify programatic creation of combinations of interleaved vertex arrays.
+	- Added CC3VertexIndices allocateTriangles: method to simplify programatic creation of indexed triangular meshes. 
+	- [API change] Deprecated the CC3MeshNode populateAs...TexturedRectangleWithSize:... family of methods:
+		- The CC3MeshNode populateAs...RectangleWithSize:... family methods can now be used either with or without textures.
+	- [API change] Deprecated the CC3MeshNode populateAsTexturedBox: method as the populateAsSolidBox: method can now be used either with or without textures.
+	- [API change] Renamed the CC3MeshNode populateAsTexturedBox:corner: method to populateAsSolidBox:corner:, added the capability to use it either with or without textures, and deprecated the populateAsTexturedBox:corner: method.
+- Added convenience support for 4D vertex locations:
+    - Added methods vertexHomogeneousLocationAt: & setVertexHomogeneousLocation:at: to CC3MeshNode & CC3Mesh.
+    - Added methods homogeneousLocationAt: & setHomogeneousLocation:at: to CC3VertexLocations.
+- Added convenience method CC3Node getMeshNodeNamed: to automatically cast a retrieved node to a CC3MeshNode. 
+- Added support for dynamic vertex array allocations:
+    - Added CC3VertexArray ensureCapacity: and reallocateElements: methods.
+    - Added CC3Mesh ensureCapacity: method.
+- [API change] Renamed CC3Camera nearClippingPlane & farClippingPlane properties to nearClippingDistance & farClippingDistance, respectively, and deprecated the originals.
+- CC3Light now supports the CCRGBAProtocol protocol, allowing control of lamp color from CCActions.
+- Added CC3SkinMeshNode and CC3SkinMesh vertexWeightsAt: and setVertexWeights:at: methods to access vertex weights as arrays.
+- [API change] Renamed the weightForVertexUnit:at: and setWeight:forVertexUnit:at: methods on CC3SkinMeshNode and CC3SkinMesh to vertexWeightForVertexUnit:at: and setVertexWeight:forVertexUnit:at: respectively and deprecated existing.
+- Added CC3SkinMeshNode and CC3SkinMesh vertexMatrixIndicesAt: and setVertexMatrixIndices:at: methods to access vertex matrix indices as arrays.
+- [API change] Renamed the matrixIndexForVertexUnit:at: and setMatrixIndex:forVertexUnit:at: methods on CC3SkinMeshNode and CC3SkinMesh to vertexMatrixIndexForVertexUnit:at: and setVertexMatrixIndex:forVertexUnit:at: respectively and deprecated existing.
+- Added support for orthonormalizing rotation matrices to remove accumulated rounding inaccuracies:
+	- Added CC3Rotator autoOrthonormalizeCount class-side property to automatically orthonormalize the rotation matrix periodically.
+	- Added CC3Rotator orthonormalize method to manually orthonormalize the rotation matrix.
+    - Added CC3GLMatrix orthonormalizeRotationStartingWith: method.
+- CC3Rotator is now a class cluster that is dynamically morphed within a CC3Node, depending on rotational needs.
+    - CC3Rotator has no state, to minimize memory footprint of nodes that do not require rotation.
+	- [API change] The type of object returned by the CC3Node rotator property can change as rotational properties and method are invoked on the node.
+- Added CC3Node animationFrameCount to retrieve the number of frames of animation supported by a node, including animation contained within descendant nodes.
+- Fixed issue where CC3LightTracker actually rotated to face the light, instead of just rotating the light vector, interfering with child node orientation. 
+- Fixed issue where vertex weight and matrix index arrays were not assigned the correct data pointer during POD loading.
+    - This affected subsequent vertex data access through the vertexMatrixIndicesAt: and vertexWeightsAt: family of methods.
+- CC3Node removeAllDirectionMarkers now removes direction markers from all descendant nodes.
+- [API change] Renamed CC3SkinMesh boneMatrixIndices property to vertexMatrixIndices and deprecated boneMatrixIndices.
+- [API change] Renamed CC3SkinMesh boneWeights property to vertexWeights and deprecated boneWeights.
+- [API change] Renamed CC3VertexArray interleaveVertices property to shouldInterleaveVertices and deprecated interleaveVertices.
+- [API change] Renamed function CC3PlaneFromPoints to CC3PlaneFromLocations.
+- Removed adding tag as component of name for automatically-created child nodes, to make it easier to access these child nodes:
+    - CC3PointParticleHoseEmitter nozzleName.
+	- CC3Node descriptorName, wireframeBoxName, localContentWireframeBoxName, addDirectionMarker, and addDirectionMarkerColored:.
+- Demo & Template Project Build settings changed to use default compiler (currently Apple LLVM), instead of LLVM
+- Fixed type-casting compilation error in Xcode 4.3 with automatic deletion of pvrtModel data structure during CC3PODResource deallocation.
+- Fixed issue where secondary cameras with default configurations were not displaying correctly due to the projection matrix not being updated correctly.
+- Fixed issue in CCNodeController, where the background device camera displayed black bar at the bottom for Retina displays.
+- Fixed issue where node picking of translucent nodes directly over the device camera during AR caused a visible flicker.
+- Changed cocos3d Xcode template app TemplateInfo.plist Identifier prefix from com.brenwill to org.cocos3d.
+- Added COCOS3D_VERSION macro define to indicate the version of the cocos3d library.
+- Removed the need to set the CC_USES_2D_PARTICLES macro define to distinguish between handling of 2D particles across cocos2d versions.
+- Clamped effective field of view of camera to below 180 degrees, to avoid scene vanishing into the distance when camera scale is set too low.
+- Minor fixes to the derivation of the targetLocation property. If derived from other rotation settings, the targetLocation will now be one unit length away from the globalLocation, in the forwardDirection.
+- [API change] The populateFrom: method used during copying of cocos3d classes that support the <NSCopying> protocol is now declared in the public interface. It no longer needs to be declared by subclasses that are overriding this method. 
+- In CC3DemoMashUp, added lower limit to speed of SpinningNode, so that it doesn't waste effort updating rotations (and shadows) when its spin speed is unnoticable.
+- In CC3DemoMashUp, the wooden sign now uses the textureRectangle property to demonstrate the covering of a mesh by only a section of a larger texture atlas.
+- Upgraded PowerVR POD library to version 2.10.
+
+
+cocos3d 0.6.5 - 2011/12/19
+-------------------------------------
+
+- Fixed issue where, with large, complex POD files, the POD loader sometimes incorrectly created skinned meshes and mesh nodes instead of regular meshes and mesh nodes.
+
+
+cocos3d 0.6.4 - 2011/11/20
+-------------------------------------
+
+- Added support for iOS 5.0 and Xcode 4.2:
+    - Fixed casting warnings in glBufferDataLogged and glBufferSubDataLogged intercept logging functions CC3OpenGLES11Intercept.c file
+- Fixed error in matrix inversion calculation algorithm.
+    - This error was causing issues with some vertex skinning situations.
+- Upgraded PowerVR POD library to version 2.09
+- Removed unnecessary PowerVR POD library files
+
+
+cocos3d 0.6.3 - 2011/11/12
+-------------------------------------
+
+- Added vertex skinning, allowing soft-body meshes to be realistically deformed based on the movement of an underlying skeleton constructed of bone and joints:
+    - Added CC3CC3SoftBodyNode to represent a character or other soft-body node.
+        - CC3CC3SoftBodyNode gathers together the skin mesh and control skeleton.
+    - Added CC3SkinMeshNode and CC3SkinMesh classes to manage the mesh that is the "skin" wrapped around the skeleton.
+    - Added CC3Bone to represent the underlying skeleton bones.
+        - CC3Bone is a subclass of CC3Node and these bones can be assembled into a skeleton.
+    - Added CC3SkinSection to manage the drawing of a section of the skin mesh that is controlled by a specific collection of bones.
+    - CC3DemoMashUp added running figures and flexible mallet to demonstrate vertex skinning, and copying soft-body nodes.
+    - Special thanks to cocos3d user Chris Myers, who took the initiative to add vertex skinning to cocos3d, and provided much of the code for vertex skinning in cocos3d.
+- Added repeatTexture: method to CC3MeshNode, CC3Mesh and CC3VertexTextureCoordinates to easily specify that the texture should repeat across the mesh, in one or both directions.
+- Support for cocos2d 1.1-beta:
+    - Fixed issue where compile breaks when using with cocos2d 1.1, due to changed structure used for 2D particle quad vertices
+    - When running with cocos2d 1.1 and above, set Xcode build setting CC_USES_2D_PARTICLES=0 in Preprocessor Macros.
+- CC3Node updateTransformMatrices and updateTransformMatrix methods now automatically incorporate any changes that have been made to ancestor nodes.
+- Added method drawFrom:forCount:withVisitor: to CC3Mesh and CC3DrawableVertexArray to allow drawing a subset of the vertices within a mesh.
+- Added CC3Node scaleTolerance property to support fuzzy testing for scaling unity and uniformity, to facilitate faster rigid matrix inversions when scaling is close to, but not exactly equal to one.
+- Added CC3Node normalScalingMethod property to allow control over how mesh vertex normals are scaled after modelview transformations.
+- Added CC3Node shouldCleanupWhenRemoved to indicate whether CCActions attached to a node should be stopped when node is removed
+    - [API change] By default, CCActions are now stopped and removed when a node is removed from its parent.
+    - [API change] By default, CCActions are now stopped and removed when a CC3World is removed from its CC3Layer.
+- Promoted shouldDisableDepthTest, shouldDisableDepthMask, shouldUseClockwiseFrontFaceWinding and depthFunction properties to CC3Node from CC3MeshNode.
+- Converted most of the CC3Foundation functions to inline functions.
+- Converted math functions to inline functions and moved functions to CC3 namespace.
+- Converted matrix math functions to inline functions and moved to CC3MatrixMath.h.
+- Fixed issue where certain combinations of rotation and scale caused incorrect matrix inversion calculation.
+    - Matrix inversion now uses adjoint-determinant algorithm instead of Gauss-Jordan reduction.
+- Fixed issue where CC3VertexIndices initialized with incorrect elementSize property, resulting in larger-than-needed memory & buffer allocations.
+- Fixed issue where length of directional marker CC3DirectionMarkerNode was sometimes failing to calculate a reasonable length.
+- Fixed issues around reading rotation angle and axis after setting them using rotateByAngle:aroundAxis:
+    - Axis and angle returned have same sign as those in the rotateByAngle:aroundAxis: method. Previously they were negated (same rotation, but confusing).
+    - Angle now smoothly moves within the range +/-180 degrees.
+    - Changed algorithm used to extract angle/axis and quaternion from a rotation matrix.
+- [API change] When the activeCamera is removed, CC3World no longer automatically makes another another camera active. This feature had caused unexpected behaviour when moving camera from one parent to another.
+- [API change] Added CC3MeshNode & CC3Mesh vertexTexCoord2FForTextureUnit:at: methods and deprecated vertexTexCoord2FAt:forTextureUnit: methods.
+- [API change] Added CC3MeshNode & CC3Mesh setVertexTexCoord2F:forTextureUnit:at: methods and deprecated setVertexTexCoord2F:at:forTextureUnit: methods.
+- [API change] Changed CC3PODResource methods meshModelAtIndex: and buildMeshModelAtIndex: to meshAtIndex: and buildMeshAtIndex:, respectively.
+- [API change] Redefined LogGLErrorState() macro function to take a format string and variable-length list of arguments.
+
+
+cocos3d 0.6.2 - 2011/10/19
+-------------------------------------
+
+- Added support for 3D point particle generators:
+    - Added abstract classes: CC3PointParticle and CC3PointParticleEmitter.
+    - Individual particles can have location, color and normal (to interact with light). Normals are automatically calculated.
+    - Added specialized point particle classes: CC3MortalPointParticle, CC3UniformMotionParticle and CC3UniformEvolutionParticle.
+    - Added specialized emitter classes: CC3PointParticleHoseEmitter and CC3VariegatedPointParticleHoseEmitter.
+    - Emitter nozzle can be attached to any node that is moving and rotating.
+    - Added particle examples to CC3DemoMashUp:
+        - Touch the robot arm to initiate a stream of particles emitted by the arm as it swings around.
+        - Uncomment [self addParticles]; line in CC3DemoMashUpWorld to experiment with static particles up close.
+- Moved all CC3MeshNode populateAs... parametric mesh population methods to a separate CC3MeshNode (ParametricShapes) category.
+    - [API change] You must now import the CC3ParametricMeshNodes.h files to use any populateAs... method.
+- Added support for textured boxes and cubes with the addition of CC3MeshNode methods populateAsTexturedBox: and populateAsTexturedBox:withCorner:.
+    - Thanks to cocos3d user andyman for contributing the prototype code and texture template file for this method.
+- Added ability to change the location and rotation of a node by a specific amount, instead of setting the final state:
+    - Added CC3Node translateBy: method
+    - Added CC3Node rotateBy: method
+    - Added CC3Node rotateByQuaternion: method
+    - Added CC3Node rotateByAngle:aroundAxis: method (thanks to cocos3d user nt901 for contributing to the development of this feature)
+- Added CC3Demo3DTiles demo app to demonstrate:
+    - Multiple CC3Layers and CC3Worlds on screen at once.
+    - Optimizing tricks under those conditions.
+    - Automatically moving the camera to frame a particular object.
+    - Touch selection and control of objects when many worlds are concurrently displayed.
+    - Techinques for allocating, deallocating, and copying user data tracked by the userData property.
+    - Using the cocos2d RootController with cocos3d.
+- Added improvements in layering CC3Layer/CC3World combinations on top of each other:
+    - Additional CC3Layer/CC3World pairs can be layered over the main CC3Layer/CC3World pair.
+    - CC3Layer and its CC3World can be made translucent when overlaying another pair, allowing impressive HUD effects.
+    - In the CC3DemoMashUp, touching the globe animates opening a small, semi-transparent child-window over top of the main window showing a close-up of the globe.
+- CC3Layer now transmits changes to its position and scale properties to the CC3World.
+    - Moving or scaling the CC3Layer will move and scale the view of the CC3World accordingly, including when using CCActions.
+    - The CC3Layer shouldAlwaysUpdateViewport property no longer needs to be set to YES when moving or scaling a CC3Layer (for example with a CCAction).
+- CC3MeshNode texture property now automatically creates a material if one does not exist when the texture is set.
+- Added diagnostic feature to help developers:
+    - Added CC3Node addDirectionMarker and addAxesDirectionMarkers methods to add short lines protruding from a node to visually orient the node in space.
+- Added movePivotTo: and movePivotToCenterOfGeometry methods to CC3MeshNode and CC3Mesh to allow underlying mesh data to be permanently transformed to a more convenient pivot location. These are useful when loading a model mesh that is not centered on the local origin, but you want it to be so.
+- Added CC3Node shouldAllowTouchableWhenInvisible property to allow nodes to be touchable even when invisible.
+- Added explicit zOrder property to CC3Node to allow the explicit setting of drawing order of nodes sorted by the CC3NodeArrayZOrderSequencer.
+    - This should only be used in special cases. The normal sorting based on distance to camera alone is more effective. See notes for the zOrder property and the CC3NodeArrayZOrderSequencer.
+- Added CC3MeshNode shouldDisableDepthTest, shouldDisableDepthMask, shouldUseClockwiseFrontFaceWinding and depthFunction properties to support more flexible use of the depth buffer for individual nodes.
+- Added support for alpha testing.
+    - Added CC3Material properties shouldDrawLowAlpha, alphaTestFunction & alphaTestReference.
+    - Added CC3MeshNode property shouldDrawLowAlpha.
+- CC3Light now makes it easy to use many lights across multiple CC3Worlds without breaking GL limit on the number of lights:
+    - Added several new initWithLightIndex: allocation and initialization methods to allow CC3Light instances to be created with a specific GL lightIndex value.
+    - Added shouldCopyLightIndex to allow a light to be copied, with the copy light using the same GL lightIndex value as the original.
+- CC3Light has improved spotlight capabilities:
+    - More realistic spotlight distribution attenuation using the new spotExponent property.
+    - CC3DemoMashUp spotlight now makes use of this capability.
+- Performance improvements:
+    - Added shouldClearDepthBufferBefore2D and shouldClearDepthBufferBefore3D properties to CC3World to control how often depth buffer is cleared during rendering.
+    - Reduced overhead in CC3World drawWorld, focusing on performance when using many simultaneous 3D worlds.
+    - Lighting properties such as attenuation and direction only set in GL engine when features are required.
+    - Replaced use of NSArray with CCArray throughout library.
+    - CC3World transform, update, and drawing visitors are instantiated once, instead of on each frame.
+        - CC3TargettingNode trackTarget method replaced with trackTargetWithVisitor:.
+    - CC3World drawingSequence eliminated. Nodes now drawn directly from CC3NodeSequencer in drawingSequencer property.
+        - CC3NodeSequencer internal structures optimized and performance improvements when dynamically changing drawing order.
+- Hooks added to CC3Identifiable to facilitate easy copying of userData when a CC3Node, or other identifiable, is copied.
+- CC3VertexColors now converts to the appropriate data types for the vertex data in the color4FAt:, setColor4F:at:, color4BAt:, and setColor4B: methods.
+- CC3World updateWorld method can now be invoked prior to the CC3World play method.
+- CC3World touchEvent:at: method now only forwards touch-down events to the node picker by default. Override this method as required.
+- Fixed issue where updateWorld was being invoked at incorrect time when adding CC3World to CC3Layer, causing an initial empty screen to be displayed.
+    - Thanks to cocos3d user Paco_777 for finding the issue and suggesting a solution.
+- Fixed issue where CC3Layer viewport could not be assigned bounds that overlapped outside the window bounds (including negative origin and position and size beyond top right window corner).
+	- Thanks to cocos3d user Robert Szeleney for pointing this out and suggesting a fix.
+- Fixed issue where negative rotation component angles were converted to their positive analogues when read back from the property.
+- Fixed issue where 2D billboards embedded in the 3D world occasionally caused texture flipping among 3D nodes under certain conditions.
+- Fixed issue in the CC3MeshNode populateAsRectangleWithSize:andPivot:withTexture:invertTexture: method where non-centered pivot point was ignored (thanks to cocos3d user nurbed for finding and suggesting the fix).
+- Fixed issue where copying a CC3World did not correctly copy the drawing sequencer.
+- Fixed issue where CC3VertexColors setColor4F:at: and setColor4B:at: set incorrect color when converting to different GL element color type.
+- Fixed issue where texture files were not being located correctly if POD files were loaded from a location outside the resources directory.
+- Added additional data types for CC3VertexColors loaded from POD files.
+    - Thanks to cocos3d user esmrg for contributing this fix.
+- Fixed issue where flicker occurred in CC3Layer background color during node picking when background color was translucent.
+    - Unavoidable flicker will still occur during node picking on a translucent object that has only the CC3Layer color background behind it, and that background color is translucent as well.
+- Fixed minor memory leak of CC3World drawingSequenceVisitor when CC3World deallocated.
+- CC3MeshNode setVertexLocation:at: now automatically marks the boundingVolume to be recalculated, to keep the bounding volume in sync with the mesh data.
+- Removed the volumeIsDirty property on CC3NodeBoundingVolume and replaced it with the markDirty method.
+- POD file resource loading now logs textures as they are loaded.
+- Demo apps now share a single central Resources directory.
+- Added additional node types to CC3Performance demo app.
+
+
+cocos3d 0.6.1 - 2011/08/30
+-------------------------------------
+
+- Added several new diagnostic features to help developers:
+    - Added CC3Node shouldDrawDescriptor property that, when set to YES, will automatically draw an identifying description of the node at the origin (pivot point) of the node.
+    - Added CC3Node shouldDrawWireframeBox and shouldDrawLocalContentWireframeBox properties that, when set to YES< will automatically draw a wireframe box around the node and all its descendants, or just the the local content of the node, respectively.
+    - Added CC3Camera moveToShowAllOf: family of methods to move the camera so that it will frame a particular node (which may be the world node) in the view.
+    - Added LOGGING_REZLOAD compiler switch to optionally log the details of POD file loading and resulting node structures to troubleshoot POD file loading.
+    - Added CC3Node structureDescription to return string descriptive outline of the descendant nodes of a node (including the CC3World) for use in diagnostic logging.
+    - Added Models folder, containing the original Blender and Collada source files for some POD models in CC3DemoMashUp and hello, world template, to help developers resolve issues with their own model files. 
+- CC3Billboards drawing cocos2d 2D nodes can now be fully embedded in the 3D world, in addition to being drawn as an overlay on the 3D world.
+- CC3Billboards that are embedded in the 3D world (the default) can be:
+    - Occluded by other 3D nodes.
+    - Rotated to face away from the camera.
+	- Selected by touch events.
+- CC3Billboard property shouldDrawAs2DOverlay can be turned on to draw 2D nodes as an overlay drawing (no occlusion by other nodes). 
+- Added enhancements to CC3TargettingNode tracking:
+    - Targetting nodes will now auto-track the targetLocation property when the shouldTrackTarget property is set to YES. This is in addition to tracking the target property if it is set.
+    - Added shouldAutotargetCamera property to CC3TargettingNode to cause the node to automatically find and track the active camera.
+    - Added CC3Node convenience methods asTargettingNode, asTracker, asCameraTracker and asLightTracker to easily and conveniently wrap any node in a targetting node.
+    - Added CC3Node shouldAutoremoveWhenEmpty property to automatically remove a node once its last child node is removed. Useful for wrappers such as CC3TargettingNode.
+    - Fixed issue where targets were not tracked when the targetting node moved and the target did not.
+- Added ability to rotate nodes around an arbitrary axis:
+    - Added CC3Node rotationAxis and rotationAngle properties (and can be used interchangably with rotation (Euler angles) and quaternion properties).
+    - Added CC3RotateByAngle and CC3RotateToAngle interval actions to animate the rotation of a node around its rotationAxis
+    - Added a spinning die cube to CC3DemoMashUp to demonstrate rotation around any axis (and using touch-move events to create swipe gestures)
+- Added vertex data access methods to CC3MeshNode and CC3Mesh to make is easy to manipulate the underlying vertex data:
+    - Vertex data access methods include: setVertexLocation:at:, setVertexNormal:at:, setVertexTexCoord2F:at:forTextureUnit:, setVertexColor4F:at:, setVertexColor4B:at:, and setVertexIndex:at: 
+- Added methods to CC3Node to identify which vertex data should be retained in main memory:
+    - doNotBufferVertexLocations, doNotBufferVertexNormals, doNotBufferVertexColors, doNotBufferVertexTextureCoordinates & doNotBufferVertexIndices to identify volitile vertex data that should not be copied to GL VBO's.
+    - retainVertexNormals, retainVertexColors, retainVertexTextureCoordinates and retainVertexIndices methods to retain vertex data even when copied to GL VBOs. Method retainVertexLocations already exists.
+    - removed obsolete shouldAllowVertexBuffering property from CC3VertexArrayMesh. 
+- Added support for using texture atlases & sprite-sheets with 3D meshes through textureRectangle property on CC3VertexTextureCoordinates, CC3Mesh and CC3MeshNode.
+- Added shouldInheritTouchability property to CC3Node to turn off touch events on a child node even when the parent is touchable.
+- Added userData property, along with initUserData and releaseUserData methods to CC3Identifiable to allow application-specific data in nodes, meshes, materials, textures, etc.
+- Added methods to make it easier to align textures with mesh data:
+    - CC3Node added alignTextures and alignInvertedTextures methods.
+    - CC3Mesh added alignWithTexturesIn: and alignWithInvertedTexturesIn: methods.
+- CC3Material now supports CCBlendProtocol property blendFunc in addition to individual sourceBlend and destinationBlend properties. Class property defaultBlendFunc now replace defaultSourceBlend and defaultDestinationBlend properties.
+- Enhancements to CC3Logging to log create log entries without timestamp and app context preamble info.
+- Fixed issue where translucent and transparent 3D nodes that are over CC3Layer background color would flicker during 3D node selection from touch events.
+- Fixed issue where changing the CC3Billboard property did not change the running status of the contained 2D CCNode. Thanks to cocos3d user Sev_Inf for submitting this patch.
+- Fixed issue where unprojecting did not work correctly when the camera was mounted on a rotating object.
+  Thanks to cocos3d forum user Rogs for suggesting a fix for this.
+- Added protection code to guard against materials in POD files containing out-of-range texture indices.
+- Fixed file permissions on file in the PVR 2.08 directory that was causing the files not to be installed in project templates.
+- CC3NodeVisitor design standardized across subclasses. Now uses a single standard visit: method.
+- CC3TransformTo now subclasses from CC3TransformBy instead of the other way around.
+- Renamed CC3WorldTouchHandler to CC3TouchedNodePicker to clarify its only function is to pick a touched node when handling touch events.
+
+
+cocos3d 0.6.0-sp - 2011/07/21
+-------------------------------------
+
+- Added a cocos3d Xcode 4 workspace to organize layout and access to cocos3d library and demo projects.
+- The 'cocos3d Application' project template ("hello, world") now includes the cocos3d source code. The cocos3d source code no longer needs to be copied into the project after creating it from a template.
+- Multi-texturing using multiple texture units is now available. CC3Material now supports adding additional textures as overlays, and CC3VertexArrayMesh supports adding additional texture mappings if separate texture mappings are required for each texture unit. Texture combination functions are configurable using a CC3TextureUnit instance attached to each texture.
+- Using multi-texturing, DOT3 bump-maps (normal maps) can be applied to models to increase surface detail on models without having to increase the number of vertices.
+- CC3BumpMapTextureUnit added for explicit bump-mapping support with multi-texturing.
+- CC3Billboard now supports 2D CCNodes that are undergoing scheduled updates, including 2D particle systems.
+- Added CC3ParticleSystemBillboard to allow 2D particle systems to be used as billboards. See the CC3DemoMashUp demo for several examples.
+- CC3Billboard now passes changes to the color and opacity properties along to the 2D CCNode if that 2D node supports the CCRGBAProtocol protocol.
+- CC3Billboard now sizes 2D billboards consistently across devices (relative to the 3D artifacts around them). This can be turned off with the shouldNormalizeScaleToDevice property.
+- All CC3TargettingNodes will now automatically track their targets once the shouldTrackTarget property is set to YES. The trackTarget method no longer needs to be invoked during udpates.
+- Any node can be added as a child to an instance of CC3TargettingNode to make that node face either the camera (halo objects), or another node, and track that node as it moves.
+- CC3Targetting node now supports the axisRestriction property to restrict its rotation to a single axis when tracking another node.
+- CC3DemoMashUp now demonstrates targetting a node to always look at the camera or another node.
+- CC3Light spotlight direction and angle now works when light is a child of another node that is rotating and moving.
+- CC3Light now supports attenuation with distance via the attenuationCoefficients property.
+- Fog effects can be applied to the CC3World via the fog property and the CC3Fog class.
+- CC3DemoMashUp now contains a pushbutton that demonstrates fog, or a tightly focused spotlight with distance intensity attenuation.
+- Added CC3EAGLView to support node-picking when antialiasing multisamping is active. While using the normal EAGLView, turning on antialiasing multisamping will cause node-picking to stop working.
+- Demo apps and cocos3d project template now use CC3EAGLView.
+- CC3MeshModel and CC3VertexArrayMeshModel now renamed to CC3Mesh and CC3VertexArrayMesh to better distinguish meshes from nodes.
+- CC3MeshNode and CC3PlaneNode now support populateAs...andTessellation:... methods to create a rectangular plane mesh as a grid of many smaller rectangular faces to improve realism with specular or spot lighting.
+- CC3VertexLocations now support convenience methods to move the pivot point of the mesh to something more convenient (such as the center of the mesh) if desired.
+- CC3VertexTextureCoordinates now supports convenience methods to flip the texture mapping horizontally or vertically, to better align textures to their meshes.
+- Added CC3VertexArray updateGLBuffer and updateGLBufferStartingAt:forLength: methods to dynamically update vertex data that has been buffered to the GL engine.
+- Added shouldAllowVertexBuffering property to CC3VertexArray and CC3VertexArrayMesh so that selecteive data can be prevented from being buffered to GL engine.
+- CC3VertexArray instances can now be copied using the copy method. Please read the CC3VertexArray class notes for more info on the ramifications of this.
+- Added CC3VertexColors color4BAt: and setColor4B: accessor methods to get and set color vertices as bytes.
+- Added minUpdateInterval property to CC3World to enforce a minimum interval if the app logic has difficulty with zero or very small intervals.
+- Added an updateWorld method to CC3World to allow app to force an asynchronous update.
+- The udpateWorld method is invoked automatically when the cc3World property of CC3Layer is set.
+- Added CC3Node isRunning property. Changing this property affects CCActions running on the node and any descendant nodes.
+- Invoking CC3Node play and pause methods, now affects all CCActions running on any nodes in the world.
+- CC3World play and pause methods are now automatically invoked when CC3World is added to the CC3Layer. App no longer needs to invoke these methods.
+- Added shouldUseLighting property to CC3Material and CC3Node to configure a material to ignore current lighting conditions and display pure colors and textures.
+- Setting node sequencing to sort based on Z-order using forwardDirection distance to the camera can now be set with the shouldUseOnlyForwardDistance property on any sequencer assembly. Only sequncers that support Z-order sequencing will make use of this property.
+- The CC3Node transformMatrix property is now settable. Global properties globalLocation and globalScale will automatically be updated.
+- CC3Layer can now be dyamically moved (using CCActions for example). However, the shouldAlwaysUpdateViewport property should be set to YES beforehand.
+- Fixed issue where object flickered on touch if only one object was touch-enabled and it was the first object to be rendered in each frame.
+- Fixed issue in CC3VertexTextureCoordinates alignWithInvertedTextureMapSize: method where full-coverage textures where not being inverted.
+- Fixed issue where content from non-interleaved POD files was not displayed. Balls.pod file now contains non-interleaved content.
+- CC3Material shininess property is now clamped to values between zero and 128
+- The camera in CC3DemoMashUp now moves forward and backward under control of the right joystick, instead of up and down. The feel is now more like a standard first-person-shooter control.
+- Removed Xcode 3 templates and instructions
+- Upgraded PowerVR POD library to version 2.08
+
+
+cocos3d 0.5.4 - 2011/04/14
+--------------------------
+
+- CC3Camera now support parallel/isometric/orthographic projection by setting the isUsingParallelProjection property
+- CC3MeshNode now supports selectively showing or culling either backfaces or frontfaces via the shouldCullBackFaces and shouldCullFrontFaces properties. These properties are also available to CC3Node to allow setting complete node assemblies at once.
+- Added method retainVertexLocations to CC3Node to allow certain nodes to retain their vertex locations when releaseRedundantData is invoked, so that it is available for use in calculations.
+- CC3NodeArrayZOrderSequencer now supports sorting nodes based on Z-distance as measured straight-out from the camera, ignoring distance contributed from node being off to the side. This is selectable using the shouldUseOnlyForwardDistance property. This is useful for planar cell animation.
+- instance variable cc3World removed from AppDelegate class in 'hello, world' templates, plus CC3DemoMashUp and CC3Performance demo apps, to simplify changing the active CC3World instance during 3D scene changes. Swapping the CC3World instance is now accomplished by simply setting the cc3World property of your customized CC3Layer.
+- [API change] CC3World cleanCaches method removed. AppDelegate no longer sends low-memory notifications to original CCWorld. This allows the app to devise its own method for managing memory in a multiple-CC3World app.
+- [API Change] CC3Camera near and far clipping planes normalized to a standard (less arbitrary) range. The nearClippingPlane now defaults to 1.0, and the farClippingPlane now defaults to 1000.0.
+
+
+cocos3d 0.5.3 - 2011/04/06
+--------------------------
+
+- includes Xcode 4 cocos3d project template (The Xcode 4 project template requires an additional project template step. See the README! file in the Xcode 4 project after creating it from the project template).
+- positioning objects by touch point location is now supported. See the CC3Camera unprojectPoint: and unprojectPoint:ontoPlane: methods. For an example of how to use this functionality, see how the CC3DemoMashUp handles touch events on the ground plane.
+- CC3Node now has an addAndLocalizeChild: method to add objects of known size and rotation and not have those properties affected by the transform of the parent object.
+- performance tuning
+- CC3World now optionally collects application drawing and updating performance statistics in the performanceStatistics property. 
+- new demo project CC3Performance now available for developers to explore cocos3d performance with various 3D models.
+- changing scale of CC3Camera (scale or uniformScale properties) now updates projectionMatrix automatically.
+- CC3BoxNode class added as subclass of CC3MeshNode to simplify the creation of cube and box meshes.
+- CC3LineNode added line population methods
+- setting CC3Material isOpaque property to NO now checks for pre-multiplied alpha in the texture and sets the sourceBlend property accordingly.
+- API docs now includes a collaboration diagram for each class, plus an overall library class hierarchy diagram
+- fixed issue where texture transparency appeared black instead of transparent.
+- fixed issue where materials flickered on touch if lighting was turned off.
+- fixed issue where meshes with vertex colors were only drawing on first node when multiple nodes use same mesh and color pointers.
+- fixed issue where replacing the cc3World in a CC3Layer with a new CC3World (ie- to perform a scene change) was not correctly updating the viewport automatically in the new CC3World.
+- [API change] CC3MeshNode populateAsCenteredRectangleWithSize:andPureColor: changed to populateAsCenteredRectangleWithSize:.
+- [API change] CC3MeshNode populateAsRectangleWithSize:andPivot:andPureColor: changed to populateAsRectangleWithSize:andPivot:.
+- [API change] CC3MeshNode populateAsWireBox:andPureColor: changed to populateAsWireBox:.
+- [API change] CC3DemoMashUpLayer - changed name of pushBallWorld property to mashUpWorld.
+- CC3DemoMashUpLayer now uses createGLBuffers to use GL VBO's for the robot army.
+- hello, world template now using a mesh with fewer vertices to improve performance on older devices
+
+
+cocos3d 0.5.2 - 2011/03/12
+--------------------------
+
+- retina display now supported
+- CC3LineNode class added as a subclass of CC3MeshNode to simplify the drawing of lines using vertex arrays. The method populateAsWireBox:withPureColor: added to CC3MeshNode as a convenience method for easily creating wire-frame boxes.
+- CC3PlaneNode class added as a subclass of CC3MeshNode to simplify support for simple planes and rectangular meshes.
+- [API change] CC3Node udpateBeforeChildren: renamed to updateBeforeTransform:
+- [API change] CC3Node udpateAfterChildren: renamed to updateAfterTransform:
+- CC3Node updateBeforeTransform: invoked automatically before transformation matrix is recalculated on that node and before same method invoked on chid nodes.
+- CC3Node updateAfterTransform: invoked automatically after transformation matrix is recalculated on that node and after same method invoked on chid nodes.
+- CC3MeshNode now supports drawing meshes in a pure, solid color that is not affected by lighting conditions, using the pureColor property. This color will only be used if a material is not attached to the node.
+- added CC3NodeArrayZOrderSequencer to allow drawing order for translucent objects to be sorted by Z-order, from farthest to nearest
+- CC3World's default drawingSequencer now draws opaque nodes first, then translucent nodes by Z-order. Z-order based on centerOfGeometry of node mesh.
+- CC3World drawingSequencer updated on each draw frame, to take into consideration dynamic Z-ordering.
+- [API change] combined CC3NodePointBoundingVolume into base CC3NodeBoundingVolume
+- [API change] renamed CC3VertexLocationsPointBoundingVolume to CC3VertexLocationsBoundingVolume
+- changing the opacity of a CC3Material (or any node holding it) using the <CCRGBAProtocol> opacity property now automatically changes the sourceBlend and destinationBlend properties to make use of the new opacity.
+- CC3Material and CC3MeshNode isOpaque property now returns YES if the alpha component of ambientColor and diffuseColor properties are both 1.0. This is in addition to returning YES if the sourceBlend and destinationBlend properties are GL_ONE and GL_ZERO respectively.
+- corrected reported issue where translucent objects experience a slight flicker when a touch event is processed. This no longer occurs when the translucent object has other 3D artifacts behind it. The flicker still occurs when the translucent object only has the layer's background color behind it, because the background color does not participate in the translucency of the object (does not show through the object).
+- corrected reported issue where CCNodes carried by CC3Billboards were not displaying correctly on the right side of a landscape screen.
+- removed memory leaks from node copying
+- corrected spontaneous and incorrect flips between device orientations when device placed in unknown orientation.
+- corrected issue with touch selection where touch events that were close together were sometimes sent with incorrect touch type. 
+- CC3DemoMashUp: corrected issue where the robot army was not visible through the translucent beach ball.
+- CC3DemoMashUp: touching the beach ball toggles the it between opacity and translucency.
+- CC3DemoMashUp: the translucent beach ball no longer flickers during touch event processing when it has 3D objects behind it. It still flickers when no objects are behind it, such as when the "sky" appears behind it. This is because the "sky" is really just the background color of the cocos2d layer, and does not participate in the translucency of the beach ball.
+- CC3DemoMashUp: touching either the textured or rainbow teapot will toggle the display of a wire-frame of the teapot's bounding box.
+- CC3DemoMashUp: the ground plane is now constructed using a CC3PlaneNode instance.
+
+
+cocos3d 0.5.1 - 2011/02/24
+--------------------------
+
+- added support for picking 3D nodes via UI touch events
+- nodes now support the <NSCopying> protocol. CC3Node copy method returns a deep copy, that creates copies of all content, except mesh data. Mesh data is never copied. This allows multiple copies of a node to be easily created from a single original node, but have all nodes share mesh data for efficiency and performance.
+- [API change] releasing redundant data from main memory, after it has been copied to a VBO within the GL engine, is no longer automatic. The application should now invoke the releaseRedundantData method on a node assembly sometime after invoking createGLBuffers. 
+- [API change] CC3Node update: method replaced with distinct updateBeforeChildren: and updateBeforeChildren: methods.
+- [API change] CC3Node visitWithVisitor: method renamed to drawWithVisitor:.
+- [API change] CC3World visit method renamed to drawWorld.
+- Added CC3Node projectedLocation property, which includes distance to camera
+- [API change] CC3Node projectedPosition property now read-only
+- [API change] CC3Camera:
+                - default camera field of view changed to 45 degrees
+                - projectLocation: now returns distance to camera in Z-component of returned CC3Vector.
+                - projectNode: now returns CC3Vector, containing the result of projectLocation: method.
+                - projectToVisiblePoint: removed.
+                - removed CC3Projector class and moved some methods to CC3ViewportManager class in CC3World.
+- [API change] CC3MeshNode populateAsCenteredRectangleWithSize:andTexture:invertTexture: and populateAsRectangleWithSize:andPivot:andTexture:invertTexture: now support flag to optionally invert textures when applying to a rectangular mesh.
+- [API change] renamed misspelled CCLayer initializeContols method to initializeControls
+- [API change] function CCC4FTranslate renamed to CCC4FAdd
+- CC3Node now supports <CCRGBAProtocol> for tinting and fading of whole node assemblies
+- CC3Node now supports material color properties
+- CC3Animate now supports animating only a fraction of a full animation, allowing you to extract one of several movements in an animation, and animate only that movement.
+- Added CC3NodeAnimation and CC3ArrayNodeAnimation classes to allow any CC3Node to be animated. Previously, only POD nodes were animated.
+- [API change] 'POD' removed from all node animation methods (eg- enablePODAnimation changed to enableAnimation).
+- CC3Camera camera compensates frustum scaling when mounted on a parent node that is scaled. Previously, near clip plane scaled when parent scaled, causing undesirable clipping.
+- Adding a node to a parent using addChild: now also automatically removes the node from the previous parent.
+- projecting from 3D to 2D now works for layers that are smaller than the full screen size.
+- Fixed bug in CC3Node removeAllChildren that caused SIGABRT
+- Added abstract CC3Resource and CC3ResourceNode classes to better support future file loaders.
+- [API change] removed *POD* loading methods from CC3PODResource and CC3PODResourceNode. Now uses generic superclass loading methods.
+- corrected problem where 2D billboards were not tracking location accurately when layer was not full-screen and device was rotated.
+- [API change] CC3Billboard draw2dWithinViewport: and doesIntersectViewport: changed to draw2dWithinBounds: and doesIntersectBounds: and checks against CC3Layer bounds for culling.
+- animations can be shared by multiple node copies
+- [API change] animations are no longer enabled and disabled themselves. The node now tracks whether its animation is enabled.
+- CC3Identifiable tags now allocated separately for each major subclass (eg- node, material, mesh, etc). This better aligns tag values with count of major instances (eg- node count, material count, etc).
+- moved BUILD_OGLES directive declaration into code instead of relying on project directive. Removed directive from compiler build settings.
+- minor documentation and commenting corrections
+
+
+cocos3d 0.5 - 2011/02/01
+------------------------
+
+Initial public release.
+
