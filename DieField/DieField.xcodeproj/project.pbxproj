@@ -605,7 +605,6 @@
 		04787F0E162F927100960CAA /* CC3VertexArrayMeshModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = CC3VertexArrayMeshModel.m; path = cocos3d/deprecated/CC3VertexArrayMeshModel.m; sourceTree = "<group>"; };
 		04787F10162F927100960CAA /* CC3World.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CC3World.h; path = cocos3d/deprecated/CC3World.h; sourceTree = "<group>"; };
 		04787F11162F927100960CAA /* CC3World.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = CC3World.m; path = cocos3d/deprecated/CC3World.m; sourceTree = "<group>"; };
-		04787F13162F927100960CAA /* README! */ = {isa = PBXFileReference; lastKnownFileType = text; path = "README!"; sourceTree = "<group>"; };
 		04787F15162F927100960CAA /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Prefix.pch; sourceTree = "<group>"; };
 		04787F16162F927100960CAA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		04787F19162F927100960CAA /* DieFieldAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DieFieldAppDelegate.h; path = Classes/DieFieldAppDelegate.h; sourceTree = "<group>"; };
@@ -671,7 +670,6 @@
 		04787CBE162F926D00960CAA /* DieField */ = {
 			isa = PBXGroup;
 			children = (
-				04787F13162F927100960CAA /* README! */,
 				04787CBF162F926D00960CAA /* Resources */,
 				04787CD3162F926D00960CAA /* libs */,
 				04787E0C162F926F00960CAA /* cocos3d */,

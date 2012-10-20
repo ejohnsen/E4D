@@ -45,21 +45,6 @@
 #pragma mark Touch handling
 
 /**
- * The ccTouchMoved:withEvent: method is optional for the <CCTouchDelegateProtocol>.
- * The event dispatcher will not dispatch events for which there is no method
- * implementation. Since the touch-move events are both voluminous and seldom used,
- * the implementation of ccTouchMoved:withEvent: has been left out of the default
- * CC3Layer implementation. To receive and handle touch-move events for object
- * picking, it must be implemented here.
- *
- * This method will not be invoked if gestures have been enabled.
- */
-- (void)ccTouchMoved: (UITouch *)touch withEvent: (UIEvent *)event {
-	
-    [self handleTouch:touch ofType:kCCTouchMoved];
-}
-
-/**
  * Invoked when this layer is being opened on the view.
  *
  * If we want to use gestures, we add the gesture recognizers here.
@@ -173,10 +158,9 @@
  * CC3Layer implementation. To receive and handle touch-move events for object
  * picking, uncomment the following method implementation.
  */
-/*
+
 -(void) ccTouchMoved: (UITouch *)touch withEvent: (UIEvent *)event {
 	[self handleTouch: touch ofType: kCCTouchMoved];
 }
- */
 
 @end
